@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>センサからの信号受信</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+  </head>
+
+  <body>
+    <h1>スマホからのセンサ情報を受信</h1>
+    <div>
+      <div>あなたのID: <span id="myid"></span></div>
+      <div>
+        ルームID: <input id="room" type="text" size="10" value="room001" />
+      </div>
+      <button id="connect">ルームに入る</button>
+      <div>受信した情報はコンソールログで確認してください</div>
+    </div>
+    <script>
+      let socket = io.connect();
+      let myid;
+
+      let room = document.querySelector("#room").value;
+      let btn = document.querySelector("#connect");
+      let b = 0;
+      let g = 0;
+
+      btn.addEventListener("click", function () {
+        socket.emit("join", room);
+        btn.remove();
+      });
+
+      socket.on("mylogin", function (data) {
+        myid = data;
+        document.querySelector("#myid").innerHTML = myid;
+        console.log("あなたのID: ", myid);
+      });
+
+      socket.on("sensor", function (data) {
+        g = parseFloat(data.g);
+        b = parseFloat(data.b);
+        console.log(g);
+      });
+
+      function setup() {
+        createCanvas(500, 500);
+        background(200);
+      }
+
+      let x = 250;
+      let y = 250;
+
+      function draw() {
+        background(200);
+        x = 250 + 3 * g;
+        y = 250 + 3 * b;
+        circle(x, y, 50);
+      }
+    </script>
+  </body>
+</html>

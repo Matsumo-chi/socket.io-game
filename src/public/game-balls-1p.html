@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agar.ioもどき</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+    <style>
+      /* ヘッダーとフッターの固定 */
+      body {
+        height: 100%;
+        overflow: hidden;
+        background-color: #88bbdd;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Agar.ioもどき</h1>
+    <div>
+      <div>
+        小さいセルを操作し、他のプレイヤーを食べてより大きく成長しましょう！しかし以下には要注意：より大きいプレイヤーがあなたを食べようと狙っています。ゲームで最大のセルになれるように、生き残り、食べまくりましょう！
+      </div>
+      <div>あなたのID: <span id="myid"></span></div>
+      <div>
+        ルームID: <input id="room" type="text" size="10" value="room001" />
+      </div>
+      <button id="connect">ルームに入る</button>
+      <button id="start">ゲームスタート</button>
+      <div>受信した情報はコンソールログで確認してください</div>
+      <p id="xDir"></p>
+    </div>
+    <script>
+      let socket = io.connect();
+      let myid = "";
+
+      let phoneid = "";
+      let audioElm = new Audio("bgm.mp3");
+      let audioEat = new Audio("b.mp3");
+
+      let room = document.querySelector("#room").value;
+      let btn = document.querySelector("#connect");
+      let btn_start = document.querySelector("#start");
+      let b = 0;
+      let g = 0;
+      let score = 0;
+      let GameOver = false;
+
+      btn.addEventListener("click", function () {
+        socket.emit("join", room);
+        btn.remove();
+      });
+
+      btn_start.addEventListener("click", function () {
+        audioElm.play(); // 再生
+        btn_start.remove();
+      });
+
+      socket.on("mylogin", function (data) {
+        myid = data;
+        document.querySelector("#myid").innerHTML = myid;
+        console.log("あなたのID: ", myid, idToColor(myid));
+      });
+      function idToColor(str) {
+        let r = (9 * str.substring(0, 1).charCodeAt(0)) % 256;
+        let g = (9 * str.substring(1, 2).charCodeAt(0)) % 256;
+        let b = (9 * str.substring(2, 3).charCodeAt(0)) % 256;
+        return "rgb(" + r + "," + g + "," + b + ")";
+      }
+
+      var gb_size = 8;
+
+      socket.on("sensor", function (data) {
+        g = parseFloat(data.g) * gb_size;
+        b = parseFloat(data.b) * gb_size;
+        phoneid = deta.id;
+        $("#xDir").html("<p>x=" + g + "</p>");
+        console.log("スマホのID: ", phoneid, idToColor(phoneid));
+      });
+
+      /*
+        ---------------------------------------------------------------
+
+        まんまる自機関数
+
+        -----------------------------------------------------------------
+        */
+      function Blob(x, y, r) {
+        this.pos = createVector(x, y);
+        this.r = r;
+        this.val = createVector(0, 0);
+
+        this.update = function () {
+          let direc = createVector(g, b);
+          direc.sub(this.pos);
+          direc.setMag(3);
+          this.val.lerp(direc, 0.9);
+          //console.log(this.pos);
+          this.pos.add(this.val);
+        };
+        this.eats = function (other) {
+          let d = p5.Vector.dist(this.pos, other.pos);
+          if (d < this.r + other.r) {
+            //2っの円の半径の合計より大きかった場合、大きくなって食べた判定を返す
+            //this.r += other.r*0.2;
+            let sum = PI * this.r * this.r + PI * other.r * other.r;
+            this.r = sqrt(sum / PI);
+            audioEat.play();
+            score = score + 1;
+            return true;
+          } else {
+            return false;
+            GameOver = true;
+          }
+        };
+
+        this.show = function () {
+          fill(idToColor(phoneid));
+          ellipse(this.pos.x, this.pos.y, this.r * 2, this.r * 2);
+          fill(0);
+          text(str(phoneid), this.pos.x, this.pos.y);
+        };
+      }
+
+      let blob;
+      let blobs = [];
+      let zoom = 1;
+
+      function setup() {
+        createCanvas(600, 600);
+        blob = new Blob(0, 0, 18, false);
+
+        //blob = new Blob(myid, 0, 0, 64);
+        for (let i = 0; i < 50; i++) {
+          let x = random(-width, width);
+          let y = random(-height, height);
+          blobs[i] = new Blob(x, y, 10);
+        }
+
+        for (let i = 0; i < 25; i++) {
+          let x = random(-width, width);
+          let y = random(-height, height);
+          blobs[i] = new Blob(x, y, 40);
+        }
+        //noStroke();
+      }
+
+      function draw() {
+        background(0);
+        translate(width / 2, height / 2);
+        let newzoom = 64 / blob.r;
+        zoom = lerp(zoom, newzoom, 0.1);
+        // leap:ベクトルを別のベクトルに直線補間
+        //blobsを食べた時に綺麗にアニメーションするようにする
+        //translate(width / 2, height / 2);
+        scale(zoom);
+        translate(-blob.pos.x, -blob.pos.y);
+        for (let i = blobs.length - 1; i >= 0; i--) {
+          blobs[i].show();
+          if (blob.eats(blobs[i])) {
+            blobs.splice(i, 1);
+          }
+        }
+
+        blob.show();
+        blob.update();
+        $("#Score").html("<p>得点：" + score + "</p>");
+        if (GameOver) {
+          fill(255);
+          rect(0, 0, 600, 600);
+          fill(255, 0, 0);
+          text("GAME OVER", 300, 300);
+        }
+      }
+    </script>
+    <p id="Score"></p>
+  </body>
+</html>

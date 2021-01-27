@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>円：ellipse</title>
+
+    <!-- 1. ここにP5.jsを読み込む -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.min.js"></script>
+
+    <!-- 2.以下にsetup関数とdraw関数を定義 -->
+    <script>
+      function setup() {
+        createCanvas(500, 500);
+        background(200);
+      }
+
+      let x = 0;
+      let y = 250;
+
+      function draw() {
+        background(200);
+        x += 5;
+        circle(x, y, 50);
+        if (x > width) {
+          x = 0;
+        }
+      }
+    </script>
+  </head>
+  <body></body>
+</html>

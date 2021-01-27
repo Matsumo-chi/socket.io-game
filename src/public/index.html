@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <meta charset="utf-8" />
+    <title>Agario Online Remix</title>
+  </head>
+
+  <body>
+    <span
+      class="formu"
+      id="Formulaire_connexion"
+      name="Formulaire_connexion"
+      action="/"
+    >
+      <h2>名前変更</h2>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        size="20"
+        maxlength="60"
+        placeholder="JS完全理解者"
+      />
+      <h3>スキン変更</h3>
+      <select name="selectSkin" id="selectSkin" size="1">
+        <option value="hat">賢そうなネコ</option>
+        <option value="face">コロナ対策なヒヨコ</option>
+        <option value="grass">ちょい悪なウサギ</option>
+        <option value="mask">あんまり意味ないヒヨコ</option>
+        <option value="muffler">あったかそうなウサギ</option>
+        <option value="onigiri">お腹いっぱいなクマ</option>
+        <option value="sword">強そうなネコ</option>
+      </select>
+      <button name="BtSub" onclick="Envoie()">始める！</button>
+    </span>
+
+    <script>
+      function Envoie() {
+        localStorage["name"] = document.getElementById("name").value;
+        let e = document.getElementById("selectSkin");
+        localStorage["skin"] = e.options[e.selectedIndex].value;
+        window.location = "game/index.html";
+      }
+    </script>
+  </body>
+</html>

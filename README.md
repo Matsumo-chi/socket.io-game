@@ -1,2 +1,2 @@
-# socket.io-game
+# soket-game
 Created with CodeSandbox
